@@ -29,17 +29,19 @@ export const sortData = (data) => {
   return sortedData;
 };
 
-export const capitalize=(string) => {
+export const capitalize = (string) => {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 export const prettyPrintStat = (stat) =>
   stat ? `+${numeral(stat).format("0.0a")}` : "+0";
 
+export const milliSecondsToDateTime = (s) => s?new Date(+s).toLocaleString('EN-GB'):'';
+
 export const showDataOnMap = (data, casesType = "cases") =>
   data.map((country) => (
     <Circle
-      key = {country.country}
+      key={country.country}
       center={[country.countryInfo.lat, country.countryInfo.long]}
       color={casesTypeColors[casesType].hex}
       fillColor={casesTypeColors[casesType].hex}

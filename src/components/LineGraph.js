@@ -9,7 +9,7 @@ const options = {
     elements: {
         point: {
             radius: 0
-        }        
+        }
     },
     maintainAspectRatio: false,
     tooltips: {
@@ -50,16 +50,19 @@ const buildChartData = (data, dataType = 'cases') => {
     const chartData = [];
     let lastDataPoint;
 
-    for (let date in data.cases) {
-        if (lastDataPoint) {
-            const newDataPoint = {
-                x: date,
-                y: data[dataType][date] - lastDataPoint
+    if (data) {
+        for (let date in data.cases) {
+            if (lastDataPoint) {
+                const newDataPoint = {
+                    x: date,
+                    y: data[dataType][date] - lastDataPoint
+                }
+                chartData.push(newDataPoint);
             }
-            chartData.push(newDataPoint);
-        }
-        lastDataPoint = data[dataType][date];
-    };
+            lastDataPoint = data[dataType][date];
+        };
+    }
+
     return chartData;
 }
 
@@ -68,16 +71,16 @@ function LineGraph({ caseType = 'cases', graphBGColor, className, country }) {
     const [data, setData] = useState({});
     //"https://disease.sh/v3/covid-19/historical/all?lastdays=120"
 
-   useEffect(() => {
+    useEffect(() => {
         //effect
         (async () => {
-            await fetch(`https://disease.sh/v3/covid-19/historical/${country==='worldwide'?'all':country}?lastdays=120`)
+            await fetch(`https://disease.sh/v3/covid-19/historical/${country === 'worldwide' ? 'all' : country}?lastdays=120`)
                 .then(response => response.json())
                 .then(data => {
                     let chartData;
-                    if(country==='worldwide'){
-                    chartData = buildChartData((data), caseType);
-                    }else{
+                    if (country === 'worldwide') {
+                        chartData = buildChartData((data), caseType);
+                    } else {
                         chartData = buildChartData((data.timeline), caseType);
                     }
 
@@ -93,19 +96,19 @@ function LineGraph({ caseType = 'cases', graphBGColor, className, country }) {
 
     return (
         <div className={className}>
-            {data?.length>0&&(
+            {data?.length > 0 && (
                 <Line
-                options = {options}
-                data={{
-                    datasets: [{
-                        backgroundColor: graphBGColor,
-                        color: '#cc1034',
-                        data: data
-                    }]
-                }}
-            />
+                    options={options}
+                    data={{
+                        datasets: [{
+                            backgroundColor: graphBGColor,
+                            color: '#cc1034',
+                            data: data
+                        }]
+                    }}
+                />
             )}
-            
+
         </div>
     )
 }
