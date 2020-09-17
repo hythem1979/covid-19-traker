@@ -1,4 +1,4 @@
-import { capitalize, Card, CardContent, FormControl, MenuItem, Select } from '@material-ui/core';
+import { Button, Card, CardContent, FormControl, MenuItem, Select } from '@material-ui/core';
 import React, { useState, useEffect, Fragment } from 'react';
 import './App.css';
 import InfoBox from './components/InfoBox';
@@ -7,6 +7,10 @@ import Map from './components/Map';
 import Table from './components/Table';
 import { prettyPrintStat, sortData } from './util';
 import "leaflet/dist/leaflet.css";
+import { useTranslation } from 'react-i18next';
+import withRoot from './withRoot';
+import { useTheme } from '@material-ui/core/styles';
+
 
 //countries: https://disease.sh/v3/covid-19/countries
 
@@ -27,6 +31,15 @@ function App() {
   const [mapCountries, setMapCountries] = useState([]);
   const [casesType, setcasesType] = useState('cases');
   // const [lastUpdate, setLastUpdate] = useState('');
+  const { t, i18n } = useTranslation('app');
+  const theme = useTheme();
+
+  document.body.dir = i18n.dir();
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng)
+    document.body.dir = i18n.dir();
+    theme.direction = i18n.dir();
+  }
 
   useEffect(() => {
     //effect
@@ -38,6 +51,7 @@ function App() {
           // setLastUpdate(data.updated);
         });
     })();
+    
     return () => {
       //cleanup
     }
@@ -51,14 +65,15 @@ function App() {
         .then(data => {
           const countries = data.map(country => (
             {
-              name: country.country,
+              name: country.country.replace(".", ""),
               value: country.countryInfo.iso3
             }
           ));
           const sortedData = sortData(data);
           setTableData(sortedData);
 
-          setMapCountries(data)
+          setMapCountries(data);
+          // console.log(countries.map(c=>c.name));
           setCountries(countries);
           //setLastUpdate(data.updated);
         });
@@ -99,11 +114,15 @@ function App() {
 
   return (
     <Fragment>
-    <div className="app">
-      <div className="app__left">
-        <div className="app__header">
-          <h1>COVID-19 TRACKER</h1>
-          {/* <div>
+        <div className="lang-change">
+        <Button onClick={() => changeLanguage('ar')} className={`ar-lang ${i18n.language==='en'?'active':''}`} >اللغة العربية</Button>/
+        <Button onClick={() => changeLanguage('en')} className={`en-lang ${i18n.language==='ar'?'active':''}`}>English</Button>
+        </div>
+      <div className="app">
+        <div className="app__left">
+          <div className="app__header">
+            <h1>{t('app.title')}</h1>
+            {/* <div>
             
             <h4 className="author">By Haitham Elbaz</h4>
             <p className="last__update">{country === 'worldwide' ? 'Worldwide' :
@@ -112,57 +131,57 @@ function App() {
             </p>
           </div> */}
 
-          <FormControl className="app__dropdown">
-            <Select variant="outlined" onChange={onCountryChange} value={country} >
-              <MenuItem value="worldwide">Worldwide</MenuItem>
-              {countries.map(country => (
-                <MenuItem key={country.name} value={country.value}>{country.name}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </div>
+            <FormControl className="app__dropdown">
+              <Select variant="outlined" onChange={onCountryChange} value={country} >
+                <MenuItem value="worldwide">{t('app.countries.Worldwide')}</MenuItem>
+                {countries.map(country => (
+                  <MenuItem key={country.name} value={country.value}>{t(`app.countries.${country.name}`)}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
 
-        <div className="app__status">
-          <InfoBox title="Coronavirus Cases"
-            onClick={e => setcasesType('cases')}
-            active={casesType === 'cases'}
-            color={casesColors.cases}
-            cases={prettyPrintStat(countryInfo.todayCases)}
-            total={prettyPrintStat(countryInfo.cases)} />
-          <InfoBox title="Recovered"
-            onClick={e => setcasesType('recovered')}
-            active={casesType === 'recovered'}
-            color={casesColors.recovered}
-            cases={prettyPrintStat(countryInfo.todayRecovered)}
-            total={prettyPrintStat(countryInfo.recovered)} />
-          <InfoBox title="Deaths"
-            onClick={e => setcasesType('deaths')}
-            active={casesType === 'deaths'}
-            color={casesColors.deaths}
-            cases={prettyPrintStat(countryInfo.todayDeaths)}
-            total={prettyPrintStat(countryInfo.deaths)} />
+          <div className="app__status">
+            <InfoBox title={t("app.infobox.cases")}
+              onClick={e => setcasesType('cases')}
+              active={casesType === 'cases'}
+              color={casesColors.cases}
+              cases={prettyPrintStat(countryInfo.todayCases)}
+              total={prettyPrintStat(countryInfo.cases)} />
+            <InfoBox title={t("app.infobox.recovered")}
+              onClick={e => setcasesType('recovered')}
+              active={casesType === 'recovered'}
+              color={casesColors.recovered}
+              cases={prettyPrintStat(countryInfo.todayRecovered)}
+              total={prettyPrintStat(countryInfo.recovered)} />
+            <InfoBox title={t("app.infobox.deaths")}
+              onClick={e => setcasesType('deaths')}
+              active={casesType === 'deaths'}
+              color={casesColors.deaths}
+              cases={prettyPrintStat(countryInfo.todayDeaths)}
+              total={prettyPrintStat(countryInfo.deaths)} />
+          </div>
+          <Map
+            countries={mapCountries}
+            casesType={casesType}
+            center={mapCenter}
+            zoom={mapZoom}
+          />
         </div>
-        <Map
-          countries={mapCountries}
-          casesType={casesType}
-          center={mapCenter}
-          zoom={mapZoom}
-        />
+        <Card className="app__rigth">
+          <CardContent>
+            <h3>{t('app.Situation')}</h3>
+            <Table countries={tableData} />
+            <h3 className="app__graphTitle">{t('app.graphtitle', {type: t(`app.infobox.${casesType}`), name: t(`app.countries.${country === 'worldwide' ? 'Worldwide' : countries.filter(c => c.value === country)[0]?.name}`)} )}</h3>
+            <LineGraph country={country} caseType={casesType} graphBGColor={casesColors[casesType]} className="app__graph" />
+          </CardContent>
+        </Card>
       </div>
-      <Card className="app__rigth">
-        <CardContent>
-          <h3>Situation by Country</h3>
-          <Table countries={tableData} />
-          <h3 className="app__graphTitle">{country === 'worldwide' ? 'Worldwide' : countries.filter(c => c.value === country)[0]?.name} {capitalize(casesType)} In 120 days</h3>
-          <LineGraph country={country} caseType={casesType} graphBGColor={casesColors[casesType]} className="app__graph" />
-        </CardContent>
-      </Card>
-    </div>
       <div id="footer">
-		<p>Haitham Elbaz © 2020</p>
-	</div>
-  </Fragment>
+        <p>{t('app.copyrigth')}</p>
+      </div>
+    </Fragment>
   );
 }
 
-export default App;
+export default withRoot(App);

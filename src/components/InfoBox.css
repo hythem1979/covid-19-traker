@@ -3,8 +3,9 @@
     cursor: pointer;
 }
 
-.infoBox:not(:last-child){
+.infoBox:not(:first-child):not(:last-child){
     margin-right: 15px;
+    margin-left: 15px;
 }
 
 .infoBox--selected {
